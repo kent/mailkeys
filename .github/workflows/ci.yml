@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test and build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests and build the app
+        run: ./build.sh
+        env:
+          MAILKEYS_APP_PATH: ${{ runner.temp }}/MailKeys.app
+      - name: Render settings snapshots
+        run: |
+          mkdir -p "$RUNNER_TEMP/snapshots"
+          MAILKEYS_SNAPSHOT="$RUNNER_TEMP/snapshots" "$RUNNER_TEMP/MailKeys.app/Contents/MacOS/MailKeys"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: settings-snapshots
+          path: ${{ runner.temp }}/snapshots

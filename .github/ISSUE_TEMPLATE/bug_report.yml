@@ -1,0 +1,44 @@
+name: Bug report
+description: Something doesn't work the way it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. Found a security or privacy problem? Please use SECURITY.md instead of a public issue.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you pressed, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Mail and select the Inbox
+        2. Hover over a message
+        3. Press E
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: macOS 26.1
+    validations:
+      required: true
+  - type: input
+    id: mailkeys
+    attributes:
+      label: MailKeys version
+      description: Shown at the bottom of the settings sidebar.
+      placeholder: "1.3"
+    validations:
+      required: true
+  - type: textarea
+    id: testmode
+    attributes:
+      label: Test Mode output
+      description: Optional. Turn on Test Mode under Settings → Advanced, press the key again, and paste what the preview line says.

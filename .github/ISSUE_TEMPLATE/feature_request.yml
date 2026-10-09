@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest a shortcut or an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: The Gmail shortcut or behaviour you're missing, and how you'd use it.
+    validations:
+      required: true
+  - type: textarea
+    id: typing
+    attributes:
+      label: Could it get in the way of typing?
+      description: MailKeys must never eat a keystroke. If this adds a shortcut, when should it stay out of the way?
