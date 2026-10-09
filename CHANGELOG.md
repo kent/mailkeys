@@ -4,6 +4,10 @@ All notable changes to MailKeys are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- MailKeys now warns when another app has turned on Secure Keyboard Entry and names it ("Keyboard blocked by Slack"). While that's on, macOS hides keys from MailKeys, which made E jump through the message list instead of archiving.
+
 ## [1.3.0] - 2026-10-08
 
 First public release.

@@ -6,7 +6,7 @@ if [[ -z "${DEVELOPER_DIR:-}" && -d /Library/Developer/CommandLineTools ]]; then
   export DEVELOPER_DIR=/Library/Developer/CommandLineTools
 fi
 WORK=$(mktemp -d)
-xcrun swiftc ShortcutPolicy.swift Responsiveness.swift Usage.swift SettingsUI.swift main.swift -framework AppKit -framework ApplicationServices -o "$WORK/mk"
+xcrun swiftc ShortcutPolicy.swift Responsiveness.swift Usage.swift SecureInput.swift SettingsUI.swift main.swift -framework AppKit -framework ApplicationServices -framework Carbon -framework IOKit -o "$WORK/mk"
 MAILKEYS_ICON="$WORK/icon.png" "$WORK/mk"
 mkdir "$WORK/AppIcon.iconset"
 for size in 16 32 128 256 512; do

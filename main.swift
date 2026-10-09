@@ -7,6 +7,8 @@
 
 import AppKit
 import ApplicationServices
+import Carbon
+import IOKit
 
 /// The app delegate. Owns the menu bar item, the Mail-only event tap and the settings window.
 final class MailKeys: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -24,6 +26,8 @@ final class MailKeys: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var previewOnly = true
     private var lastPreview = "No shortcut tested yet"
     private var tapFailed = false
+    /// The app holding Secure Keyboard Entry, which hides keys from the tap. nil when nobody does.
+    private var secureInputHolder: String?
     private var menuOpen = false
     private var settingsPanel: SettingsPanel?
     private var settingsWindow: NSWindow? { settingsPanel?.window }
@@ -282,6 +286,7 @@ final class MailKeys: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Runs every second. Attaches the tap when Mail is running and permission is granted,
     /// re-attaches when Mail relaunches, and detaches when paused.
     private func reconcile() {
+        secureInputHolder = currentSecureInputHolder()
         let pid = NSRunningApplication.runningApplications(withBundleIdentifier: mailID).first?.processIdentifier
         guard AXIsProcessTrusted(), !paused, let pid else {
             if tap != nil { stopTap() }
@@ -329,6 +334,22 @@ final class MailKeys: NSObject, NSApplicationDelegate, NSMenuDelegate {
         mailPID = nil
         held.removeAll()
         consumedKeys.removeAll()
+    }
+
+    /// Who holds Secure Keyboard Entry right now. macOS records the holder's process in the
+    /// console session; if it names nothing but secure input is on, the holder is unknown.
+    private func currentSecureInputHolder() -> String? {
+        guard IsSecureEventInputEnabled() else { return nil }
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOResources"))
+        guard service != 0 else { return "another app" }
+        defer { IOObjectRelease(service) }
+        let users = IORegistryEntryCreateCFProperty(service, "IOConsoleUsers" as CFString, kCFAllocatorDefault, 0)?
+            .takeRetainedValue() as? [[String: Any]] ?? []
+        for user in users {
+            guard let pid = user["kCGSSessionSecureInputPID"] as? Int, pid > 0 else { continue }
+            return NSRunningApplication(processIdentifier: pid_t(pid))?.localizedName ?? "another app"
+        }
+        return "another app"
     }
 
     /// Invalidates the focus cache whenever Mail's focus or windows change.
@@ -500,21 +521,23 @@ final class MailKeys: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let trusted = AXIsProcessTrusted()
         if !trusted { state = "Needs Accessibility permission"; tone = .attention }
         else if paused { state = "Paused"; tone = .paused }
+        else if let blocked = SecureInput.status(holder: secureInputHolder) { state = blocked; tone = .attention }
         else if tapFailed { state = "Could not attach to Mail"; tone = .attention }
         else if tap == nil { state = "Waiting for Apple Mail"; tone = .waiting }
         else { state = "Ready: hover a message and press e"; tone = .ready }
         settingsPanel?.update(status: state, tone: tone, trusted: trusted, paused: paused,
-                              testMode: previewOnly, preview: lastPreview)
+                              testMode: previewOnly, preview: lastPreview, blockedBy: secureInputHolder)
         settingsPanel?.updateUsage(usage)
         guard !menuOpen else { return }
         let saved = usage.totalUses == 0 ? "No time saved yet"
             : "Saved \(UsageStats.format(seconds: usage.secondsSaved)) across \(usage.totalUses) shortcuts"
-        let menuState = "\(state)|\(paused)|\(previewOnly)|\(lastPreview)|\(saved)"
+        let menuState = "\(state)|\(paused)|\(previewOnly)|\(lastPreview)|\(saved)|\(secureInputHolder ?? "")"
         guard menuState != lastMenuState else { return }
         lastMenuState = menuState
         let menu = NSMenu()
         menu.delegate = self
         menu.addItem(item("MailKeys · \(state)"))
+        if let holder = secureInputHolder { menu.addItem(item(SecureInput.menuHint(holder: holder))) }
         menu.addItem(item(saved))
         menu.addItem(.separator())
         menu.addItem(item("Pause Shortcuts", action: #selector(togglePause), checked: paused))

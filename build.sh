@@ -11,9 +11,9 @@ fi
 APP="${MAILKEYS_APP_PATH:-$HOME/Applications/MailKeys.app}"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
-xcrun swiftc ShortcutPolicy.swift Responsiveness.swift Usage.swift PolicyTests.swift -o "${TMPDIR:-/tmp}/mailkeys-policy-tests"
+xcrun swiftc ShortcutPolicy.swift Responsiveness.swift Usage.swift SecureInput.swift PolicyTests.swift -o "${TMPDIR:-/tmp}/mailkeys-policy-tests"
 "${TMPDIR:-/tmp}/mailkeys-policy-tests"
-xcrun swiftc -O ShortcutPolicy.swift Responsiveness.swift Usage.swift SettingsUI.swift main.swift -framework AppKit -framework ApplicationServices -o "$APP/Contents/MacOS/MailKeys"
+xcrun swiftc -O ShortcutPolicy.swift Responsiveness.swift Usage.swift SecureInput.swift SettingsUI.swift main.swift -framework AppKit -framework ApplicationServices -framework Carbon -framework IOKit -o "$APP/Contents/MacOS/MailKeys"
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

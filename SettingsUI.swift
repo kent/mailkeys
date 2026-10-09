@@ -385,7 +385,9 @@ final class StatusPill: NSView {
         switch tone {
         case .ready: return "Ready in Mail"
         case .paused: return "Paused"
-        case .attention: return text.hasPrefix("Needs") ? "Needs permission" : "Can’t reach Mail"
+        case .attention:
+            if text.hasPrefix("Needs") { return "Needs permission" }
+            return text.hasPrefix("Keyboard") ? "Keyboard blocked" : "Can’t reach Mail"
         case .waiting: return "Waiting for Mail"
         case .testing: return "Test Mode on"
         }
@@ -624,6 +626,7 @@ final class SettingsPanel: NSObject {
     private weak var paneView: PaneView?
     private var trusted = true
     private var testMode = false
+    private var blockedBy: String?
     private let practiceTitle = makeLabel("Practice first", size: 13.5, weight: .medium, color: Palette.ink, rounded: true)
     private let practiceDetail = makeLabel("", size: 12, color: Palette.subtle, wrapWidth: 230)
     private lazy var practiceButton = PillButton("Try Test Mode", style: .tinted(Palette.violet)) { [weak self] in
@@ -676,8 +679,10 @@ final class SettingsPanel: NSObject {
 
     // MARK: State
 
-    func update(status: String, tone: StatusPill.Tone, trusted: Bool, paused: Bool, testMode: Bool, preview: String) {
+    func update(status: String, tone: StatusPill.Tone, trusted: Bool, paused: Bool, testMode: Bool, preview: String,
+                blockedBy: String? = nil) {
         statusPill.set(status, tone: testMode && tone == .ready ? .testing : tone)
+        self.blockedBy = blockedBy
         self.testMode = testMode
         self.trusted = trusted
         self.paused = paused
@@ -689,7 +694,8 @@ final class SettingsPanel: NSObject {
         var text: String
         let symbol: String
         let tint: NSColor
-        if testMode { text = preview == "No shortcut tested yet" ? "Press a shortcut in Mail to try it." : preview; symbol = "eye.fill"; tint = Palette.violet }
+        if let holder = blockedBy, trusted { text = "Keys are hidden by \(holder)’s Secure Keyboard Entry."; symbol = "keyboard.badge.ellipsis"; tint = .systemOrange }
+        else if testMode { text = preview == "No shortcut tested yet" ? "Press a shortcut in Mail to try it." : preview; symbol = "eye.fill"; tint = Palette.violet }
         else if !trusted { text = "Grant access to switch shortcuts on."; symbol = "lock.fill"; tint = .systemOrange }
         else if paused { text = "Shortcuts are paused."; symbol = "pause.fill"; tint = .secondaryLabelColor }
         else { text = "Shortcuts are live in Mail."; symbol = "bolt.fill"; tint = .systemGreen }
@@ -892,7 +898,11 @@ final class SettingsPanel: NSObject {
     private func refreshGuide() {
         let header: String, title: String, detail: String, symbol: String, colors: [NSColor]
         var button: String?
-        if !trusted {
+        if let holder = blockedBy, trusted {
+            (header, title, symbol) = ("Heads up", "Keyboard blocked by \(holder)", "keyboard.badge.ellipsis")
+            detail = SecureInput.explanation(holder: holder)
+            colors = [Palette.hex(0xFFC15A), Palette.hex(0xF08A24)]
+        } else if !trusted {
             (header, title, symbol) = ("Get started", "Allow Accessibility", "lock.fill")
             detail = "MailKeys needs it to see which message your pointer is on. Use Grant Access in the sidebar."
             colors = [Palette.hex(0xFFC15A), Palette.hex(0xF08A24)]
@@ -1270,6 +1280,7 @@ final class SettingsPanel: NSObject {
                 $0.setSpeedResult("Instant. About 0.4 ms per key.", ok: true)
             }),
             ("advanced-light", false, { $0.update(status: "Ready: hover a message and press e", tone: .ready, trusted: true, paused: false, testMode: false, preview: "") }),
+            ("blocked-light", false, { $0.update(status: "Keyboard blocked by Slack", tone: .attention, trusted: true, paused: false, testMode: false, preview: "", blockedBy: "Slack") }),
             ("paused-light", false, { $0.update(status: "Paused", tone: .paused, trusted: true, paused: true, testMode: false, preview: "") }),
         ]
         for state in states {

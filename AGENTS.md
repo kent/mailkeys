@@ -25,6 +25,7 @@ MAILKEYS_SNAPSHOT=/some/dir ~/Applications/MailKeys.app/Contents/MacOS/MailKeys 
 | `ShortcutPolicy.swift` | Key bindings and every rule for when a shortcut may act. Pure logic, no AppKit |
 | `Responsiveness.swift` | Focus cache and the J/K glide state machine. Pure logic |
 | `Usage.swift` | Shortcut counts and the time saved estimate. Pure logic |
+| `SecureInput.swift` | Wording for the Secure Keyboard Entry warning. Detection lives in `main.swift` |
 | `SettingsUI.swift` | The settings window and the app icon, all drawn in code |
 | `PolicyTests.swift` | Dependency-free test runner for the pure logic files |
 

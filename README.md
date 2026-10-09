@@ -56,6 +56,12 @@ Only shortcuts that actually did something count. Test Mode doesn't count. Holdi
 
 The math compares each shortcut with doing the same thing with a mouse, using standard [Keystroke-Level Model](https://en.wikipedia.org/wiki/Keystroke-level_model) timings: reach for the mouse 0.4 s, point 1.1 s, click 0.2 s, press a key 0.28 s. That's about 1.4 s saved per shortcut and 1.6 s per archive. It adds up faster than you'd think. See `Usage.swift`.
 
+## Troubleshooting
+
+**Pressing `E` jumps to a message near the bottom of the list.** Another app has turned on macOS Secure Keyboard Entry. While it's on, macOS hides every keystroke from MailKeys, so `E` reaches Mail as a plain letter and Mail jumps to a sender starting with "e". MailKeys spots this and names the app in the menu bar and the settings window ("Keyboard blocked by Slack"). Close any password prompt in that app, or quit it, and MailKeys works again. No keyboard tool can get around this. It's a macOS security feature.
+
+**Nothing happens at all.** Check that MailKeys has Accessibility permission, isn't paused, and isn't in Test Mode. Hover-to-archive only works over the message list in Mail's front window.
+
 ## What you need
 
 - macOS 13 or later
@@ -96,6 +102,7 @@ Or put that line in a `signing.local` file next to `build.sh`. It's git-ignored.
 | `ShortcutPolicy.swift` | The key bindings and the rules for when a shortcut is allowed to act |
 | `Responsiveness.swift` | The focus cache and the J/K glide |
 | `Usage.swift` | Shortcut counts and the time saved math |
+| `SecureInput.swift` | The warning shown when another app blocks the keyboard |
 | `SettingsUI.swift` | The settings window and the app icon, all drawn in code |
 | `PolicyTests.swift` | Tests |
 
